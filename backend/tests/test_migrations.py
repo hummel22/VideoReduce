@@ -20,3 +20,5 @@ def test_initial_migration(tmp_path):
     assert "users" in tables
     assert "queue_jobs" in tables
     assert "encoding_profiles" in tables
+    assert "dashboard_snapshots" in tables
+    assert "dashboard_events" in tables

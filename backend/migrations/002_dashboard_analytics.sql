@@ -1,0 +1,15 @@
+CREATE TABLE IF NOT EXISTS dashboard_snapshots (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    active_jobs INTEGER NOT NULL DEFAULT 0,
+    average_throughput_minutes REAL NOT NULL DEFAULT 0,
+    smb_latency_ms REAL NOT NULL DEFAULT 0,
+    storage_budget_bytes INTEGER NOT NULL DEFAULT 0,
+    recorded_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS dashboard_events (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    title TEXT NOT NULL,
+    description TEXT NOT NULL,
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);

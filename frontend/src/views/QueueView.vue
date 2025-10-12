@@ -11,7 +11,7 @@
     </header>
     <JobTable
       title="In-flight jobs"
-      subtitle="Data reflects the most recent sync. Requires administrator credentials for live API access."
+      subtitle="Data reflects the most recent response from the authenticated queue API."
       :jobs="jobs"
     />
     <p v-if="error" class="error">
@@ -21,11 +21,11 @@
 </template>
 
 <script setup>
-import { onMounted, reactive, ref } from 'vue';
+import { onMounted, ref } from 'vue';
 import JobTable from '../components/JobTable.vue';
 import { getQueueJobs } from '../api/client.js';
 
-const jobs = reactive([]);
+const jobs = ref([]);
 const error = ref('');
 
 function toDisplayJob(job, index) {
@@ -41,52 +41,18 @@ function toDisplayJob(job, index) {
   };
 }
 
-function seedJobs() {
-  return [
-    {
-      id: 101,
-      videoName: 'marketing-reel.mov',
-      stage: 'transcoding',
-      status: 'running',
-      progress: 64,
-      profile: 'default-hq',
-      duration: '04:12',
-      size: '842 MB'
-    },
-    {
-      id: 102,
-      videoName: 'q4-townhall.mp4',
-      stage: 'uploading',
-      status: 'pending',
-      progress: 32,
-      profile: 'mobile',
-      duration: '48:20',
-      size: '3.1 GB'
-    },
-    {
-      id: 103,
-      videoName: 'engineering-demo.mkv',
-      stage: 'verifying',
-      status: 'awaiting-review',
-      progress: 92,
-      profile: 'extra-high-quality',
-      duration: '11:02',
-      size: '1.8 GB'
-    }
-  ];
-}
-
 async function loadJobs() {
   error.value = '';
-  jobs.splice(0, jobs.length, ...seedJobs());
   try {
     const response = await getQueueJobs();
     if (Array.isArray(response)) {
-      jobs.splice(0, jobs.length, ...response.map(toDisplayJob));
+      jobs.value = response.map(toDisplayJob);
+    } else {
+      jobs.value = [];
     }
   } catch (err) {
-    error.value =
-      'Unable to reach the authenticated queue endpoint. Showing the latest cached sample data instead.';
+    jobs.value = [];
+    error.value = 'Unable to reach the authenticated queue endpoint.';
     console.warn('Queue API unreachable', err);
   }
 }

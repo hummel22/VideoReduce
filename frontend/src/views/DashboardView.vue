@@ -52,7 +52,7 @@
 
     <section class="timeline">
       <h2>Recent activity</h2>
-      <ol>
+      <ol v-if="recentEvents.length">
         <li v-for="event in recentEvents" :key="event.id">
           <div class="event-meta">
             <span class="event-title">{{ event.title }}</span>
@@ -61,6 +61,7 @@
           <p>{{ event.description }}</p>
         </li>
       </ol>
+      <p v-else class="empty-state">No timeline activity recorded yet.</p>
     </section>
   </section>
 </template>
@@ -68,36 +69,74 @@
 <script setup>
 import { computed, onMounted, reactive, ref } from 'vue';
 import StatCard from '../components/StatCard.vue';
-import { getHealth } from '../api/client.js';
+import { getDashboardOverview, getHealth, listDashboardEvents } from '../api/client.js';
 
 const healthStatus = ref('unknown');
 const statistics = reactive({
-  activeJobs: 4,
-  averageThroughput: '62 min/h',
-  smbLatency: '118 ms',
-  storageBudget: '2.4 TB'
+  activeJobs: 0,
+  averageThroughput: '0 min/h',
+  smbLatency: '0 ms',
+  storageBudget: '0 B'
 });
 
-const recentEvents = reactive([
-  {
-    id: 1,
-    title: 'Portfolio HQ-Streaming promoted',
-    time: '2 minutes ago',
-    description: 'Raised default transcoding preset for videos longer than 30 minutes.'
-  },
-  {
-    id: 2,
-    title: 'New upload from Android client',
-    time: '11 minutes ago',
-    description: 'Clip "studio-intro.mov" queued with the extra high quality flag.'
-  },
-  {
-    id: 3,
-    title: 'Queue catch-up complete',
-    time: '1 hour ago',
-    description: 'Backlog processed successfully. All outputs verified and mirrored to SMB output.'
+const recentEvents = ref([]);
+
+function formatThroughput(value) {
+  if (!value) return '0 min/h';
+  return `${Number(value).toFixed(1)} min/h`;
+}
+
+function formatLatency(value) {
+  if (!value) return '0 ms';
+  return `${Math.round(Number(value))} ms`;
+}
+
+function formatStorage(bytes) {
+  const size = Number(bytes ?? 0);
+  if (size <= 0) {
+    return '0 B';
   }
-]);
+  const units = ['B', 'KB', 'MB', 'GB', 'TB', 'PB'];
+  const exponent = Math.min(Math.floor(Math.log(size) / Math.log(1024)), units.length - 1);
+  const value = size / 1024 ** exponent;
+  return `${value.toFixed(exponent === 0 ? 0 : 1)} ${units[exponent]}`;
+}
+
+function formatTimestamp(isoString) {
+  const date = new Date(isoString);
+  if (Number.isNaN(date.getTime())) {
+    return '';
+  }
+  return new Intl.DateTimeFormat(undefined, {
+    dateStyle: 'medium',
+    timeStyle: 'short'
+  }).format(date);
+}
+
+async function loadAnalytics() {
+  try {
+    const overview = await getDashboardOverview();
+    statistics.activeJobs = overview.active_jobs ?? 0;
+    statistics.averageThroughput = formatThroughput(overview.average_throughput_minutes);
+    statistics.smbLatency = formatLatency(overview.smb_latency_ms);
+    statistics.storageBudget = formatStorage(overview.storage_budget_bytes);
+  } catch (error) {
+    console.warn('Unable to load dashboard overview', error);
+  }
+
+  try {
+    const events = await listDashboardEvents();
+    recentEvents.value = events.map((event) => ({
+      id: event.id,
+      title: event.title,
+      description: event.description,
+      time: formatTimestamp(event.created_at)
+    }));
+  } catch (error) {
+    console.warn('Unable to load dashboard events', error);
+    recentEvents.value = [];
+  }
+}
 
 const statusClass = computed(() => {
   switch (healthStatus.value) {
@@ -129,6 +168,7 @@ onMounted(async () => {
     console.warn('Unable to reach health endpoint', error);
     healthStatus.value = 'unknown';
   }
+  await loadAnalytics();
 });
 </script>
 
@@ -207,6 +247,8 @@ onMounted(async () => {
   border-radius: 1.5rem;
   padding: 2rem;
   box-shadow: 0 18px 45px rgba(15, 23, 42, 0.05);
+  display: grid;
+  gap: 1.25rem;
 }
 
 .timeline h2 {
@@ -257,6 +299,11 @@ onMounted(async () => {
 .timeline p {
   margin: 0.35rem 0 0;
   color: #475569;
+}
+
+.empty-state {
+  margin: 0;
+  color: #94a3b8;
 }
 
 @media (max-width: 720px) {

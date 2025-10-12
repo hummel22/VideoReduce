@@ -7,7 +7,7 @@ from . import compat as _compat  # noqa: F401  # Ensure compatibility patches ru
 from fastapi import APIRouter, FastAPI
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
-from .api import admin, auth as auth_router, configuration, queue
+from .api import admin, analytics, auth as auth_router, configuration, queue, users
 from .bootstrap import bootstrap_service_accounts
 from .config import get_settings
 from .migrations import run_migrations
@@ -47,6 +47,8 @@ def healthcheck() -> dict[str, str]:
 api_router.include_router(auth_router.router)
 api_router.include_router(configuration.router)
 api_router.include_router(queue.router)
+api_router.include_router(analytics.router)
+api_router.include_router(users.router)
 api_router.include_router(admin.router)
 
 app.include_router(api_router)

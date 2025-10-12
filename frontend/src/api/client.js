@@ -114,3 +114,22 @@ export async function getQueueJobs() {
 export async function listEncodingRules() {
   return request('/config/encoding/rules');
 }
+
+export async function getDashboardOverview() {
+  return request('/analytics/overview');
+}
+
+export async function listDashboardEvents() {
+  return request('/analytics/events');
+}
+
+export async function listUsers() {
+  return request('/users');
+}
+
+export async function createUser(payload) {
+  return request('/users', {
+    method: 'POST',
+    body: JSON.stringify(payload)
+  });
+}

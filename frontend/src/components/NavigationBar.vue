@@ -41,7 +41,7 @@ const items = [
   { id: 'dashboard', label: 'Dashboard', icon: '📊' },
   { id: 'queue', label: 'Queue monitor', icon: '🎞️' },
   { id: 'configuration', label: 'Configuration', icon: '⚙️' },
-  { id: 'users', label: 'Administrators', icon: '🛡️' }
+  { id: 'users', label: 'Users', icon: '🛡️' }
 ];
 </script>
 
