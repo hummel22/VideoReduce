@@ -31,10 +31,27 @@ def _patch_forward_ref_evaluate() -> None:
     if getattr(original_evaluate, "__patched_for_py313__", False):
         return
 
-    def _patched_evaluate(self: typing.ForwardRef, globalns, localns, recursive_guard=None):
+    def _patched_evaluate(
+        self: typing.ForwardRef,
+        globalns,
+        localns,
+        *_type_params,
+        recursive_guard=None,
+    ):
+        """Wrapper compatible with both the pre and post Python 3.13 signatures."""
+
+        # Python 3.13 passes ``type_params`` as a positional argument.  Older
+        # versions don't provide it, so we simply ignore the value when present
+        # to preserve the behaviour of Pydantic's original patch.
         if recursive_guard is None:
             recursive_guard = set()
-        return original_evaluate(self, globalns, localns, recursive_guard=recursive_guard)
+
+        return original_evaluate(
+            self,
+            globalns,
+            localns,
+            recursive_guard=recursive_guard,
+        )
 
     _patched_evaluate.__patched_for_py313__ = True  # type: ignore[attr-defined]
 
