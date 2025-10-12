@@ -19,9 +19,6 @@ export PYTHONPATH="${PROJECT_ROOT}:${PYTHONPATH:-}"
 
 ${PYTHON_BIN} -m backend.app.manage migrate
 
-if ! pgrep -f "uvicorn backend.app.main:app" >/dev/null 2>&1; then
-  nohup ${PYTHON_BIN} -m uvicorn backend.app.main:app --host 0.0.0.0 --port 8000 >/tmp/videoreduce-api.log 2>&1 &
+  ${PYTHON_BIN} -m uvicorn backend.app.main:app --host 0.0.0.0 --port 8000 
   echo "API server started on port 8000"
-else
-  echo "API server already running"
-fi
+
