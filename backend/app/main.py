@@ -67,6 +67,7 @@ def healthcheck() -> dict[str, str]:
     return {"status": "ok"}
 
 
+@app.get("/", response_class=HTMLResponse, include_in_schema=False)
 @app.get("/admin", response_class=HTMLResponse, include_in_schema=False)
 @app.get("/admin/", response_class=HTMLResponse, include_in_schema=False)
 def admin_panel() -> HTMLResponse:

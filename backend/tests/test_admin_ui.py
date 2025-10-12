@@ -10,9 +10,13 @@ def test_admin_dashboard_index_served() -> None:
     """The index HTML should be served when the dashboard assets are present."""
 
     with TestClient(app) as client:
-        response = client.get("/admin")
+        response = client.get("/")
         assert response.status_code == 200
         assert "VideoReduce Admin Panel" in response.text
+
+        admin_response = client.get("/admin")
+        assert admin_response.status_code == 200
+        assert "VideoReduce Admin Panel" in admin_response.text
 
         asset_response = client.get("/admin/static/app.js")
         assert asset_response.status_code == 200
