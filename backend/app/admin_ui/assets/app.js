@@ -1,16 +1,16 @@
 import { createApp, ref, reactive, computed, onMounted } from 'https://unpkg.com/vue@3.4.21/dist/vue.esm-browser.prod.js';
-import PrimeVue from 'https://unpkg.com/primevue@3.53.0/config/config.esm.js';
-import ToastService from 'https://unpkg.com/primevue@3.53.0/toastservice/toastservice.esm.js';
-import { useToast } from 'https://unpkg.com/primevue@3.53.0/usetoast/usetoast.esm.js';
-import Button from 'https://unpkg.com/primevue@3.53.0/button/button.esm.js';
-import Card from 'https://unpkg.com/primevue@3.53.0/card/card.esm.js';
-import InputText from 'https://unpkg.com/primevue@3.53.0/inputtext/inputtext.esm.js';
-import Password from 'https://unpkg.com/primevue@3.53.0/password/password.esm.js';
-import Textarea from 'https://unpkg.com/primevue@3.53.0/textarea/textarea.esm.js';
-import DataTable from 'https://unpkg.com/primevue@3.53.0/datatable/datatable.esm.js';
-import Column from 'https://unpkg.com/primevue@3.53.0/column/column.esm.js';
-import Tag from 'https://unpkg.com/primevue@3.53.0/tag/tag.esm.js';
-import Toast from 'https://unpkg.com/primevue@3.53.0/toast/toast.esm.js';
+import PrimeVue from 'https://unpkg.com/primevue@3.53.0/config/config.esm.js?module';
+import ToastService from 'https://unpkg.com/primevue@3.53.0/toastservice/toastservice.esm.js?module';
+import { useToast } from 'https://unpkg.com/primevue@3.53.0/usetoast/usetoast.esm.js?module';
+import Button from 'https://unpkg.com/primevue@3.53.0/button/button.esm.js?module';
+import Card from 'https://unpkg.com/primevue@3.53.0/card/card.esm.js?module';
+import InputText from 'https://unpkg.com/primevue@3.53.0/inputtext/inputtext.esm.js?module';
+import Password from 'https://unpkg.com/primevue@3.53.0/password/password.esm.js?module';
+import Textarea from 'https://unpkg.com/primevue@3.53.0/textarea/textarea.esm.js?module';
+import DataTable from 'https://unpkg.com/primevue@3.53.0/datatable/datatable.esm.js?module';
+import Column from 'https://unpkg.com/primevue@3.53.0/column/column.esm.js?module';
+import Tag from 'https://unpkg.com/primevue@3.53.0/tag/tag.esm.js?module';
+import Toast from 'https://unpkg.com/primevue@3.53.0/toast/toast.esm.js?module';
 
 const STORAGE_KEY = 'videoreduce_admin_token';
 
