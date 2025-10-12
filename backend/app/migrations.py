@@ -34,7 +34,10 @@ def apply_migrations(session: Session) -> None:
             raw_connection = session.connection().connection
             raw_connection.executescript(handle.read())
         session.execute(
-            text("INSERT INTO schema_migrations (version) VALUES (:version)"),
+            text(
+                "INSERT INTO schema_migrations (version) VALUES (:version) "
+                "ON CONFLICT(version) DO NOTHING"
+            ),
             {"version": version},
         )
 

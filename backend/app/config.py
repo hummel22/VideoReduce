@@ -38,8 +38,20 @@ class Settings(BaseSettings):
         description="Number of minutes a session token remains valid.",
         ge=5,
     )
-    admin_username: str = Field(..., description="Dashboard administrator username.")
-    admin_password: str = Field(..., description="Dashboard administrator password.")
+    admin_username: str = Field(
+        default="admin",
+        description=(
+            "Dashboard administrator username. Defaults to 'admin' for local development"
+            " and can be overridden with the VIDEOR_ADMIN_USERNAME environment variable."
+        ),
+    )
+    admin_password: str = Field(
+        default="changeme",
+        description=(
+            "Dashboard administrator password. Defaults to 'changeme' for local development"
+            " and can be overridden with the VIDEOR_ADMIN_PASSWORD environment variable."
+        ),
+    )
     handbrake_cli_path: str = Field(
         default="HandBrakeCLI",
         description="Path to the HandBrakeCLI binary used for transcoding.",
