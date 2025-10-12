@@ -19,6 +19,6 @@ export PYTHONPATH="${PROJECT_ROOT}:${PYTHONPATH:-}"
 
 ${PYTHON_BIN} -m backend.app.manage migrate
 
-  ${PYTHON_BIN} -m uvicorn backend.app.main:app --host 0.0.0.0 --port 8000 
-  echo "API server started on port 8000"
+${PYTHON_BIN} -m uvicorn backend.app.main:app --host 0.0.0.0 --port 8005 
+echo "API server started on port 8000"
 
