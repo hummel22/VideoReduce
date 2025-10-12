@@ -52,6 +52,20 @@ class Settings(BaseSettings):
             " and can be overridden with the VIDEOR_ADMIN_PASSWORD environment variable."
         ),
     )
+    dashboard_username: str = Field(
+        default="dashboard",
+        description=(
+            "Service account username used by the bundled dashboard. Override with"
+            " the VIDEOR_DASHBOARD_USERNAME environment variable."
+        ),
+    )
+    dashboard_token: str = Field(
+        default="dashboard-service-token",
+        description=(
+            "Static API token issued to the dashboard service account. Override with"
+            " the VIDEOR_DASHBOARD_TOKEN environment variable."
+        ),
+    )
     handbrake_cli_path: str = Field(
         default="HandBrakeCLI",
         description="Path to the HandBrakeCLI binary used for transcoding.",

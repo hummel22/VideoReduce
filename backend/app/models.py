@@ -169,3 +169,27 @@ class JobEvent(Base):
     created_at: datetime = Column(DateTime, default=datetime.utcnow, nullable=False)
 
     job = relationship("QueueJob", back_populates="events")
+
+
+class DashboardSnapshot(Base):
+    """Time-series snapshot of dashboard metrics."""
+
+    __tablename__ = "dashboard_snapshots"
+
+    id: int = Column(Integer, primary_key=True)
+    active_jobs: int = Column(Integer, nullable=False, default=0)
+    average_throughput_minutes: float = Column(Float, nullable=False, default=0.0)
+    smb_latency_ms: float = Column(Float, nullable=False, default=0.0)
+    storage_budget_bytes: int = Column(Integer, nullable=False, default=0)
+    recorded_at: datetime = Column(DateTime, default=datetime.utcnow, nullable=False)
+
+
+class DashboardEvent(Base):
+    """Narrative events displayed on the dashboard timeline."""
+
+    __tablename__ = "dashboard_events"
+
+    id: int = Column(Integer, primary_key=True)
+    title: str = Column(String(255), nullable=False)
+    description: str = Column(Text, nullable=False)
+    created_at: datetime = Column(DateTime, default=datetime.utcnow, nullable=False)

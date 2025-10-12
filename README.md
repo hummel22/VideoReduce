@@ -164,6 +164,8 @@ The service reads configuration from variables prefixed with `VIDEOR_`:
 - `VIDEOR_ADMIN_USERNAME` – dashboard login username.
 - `VIDEOR_ADMIN_PASSWORD` – dashboard login password.
 - `VIDEOR_JWT_SECRET_KEY` – signing secret for issued JWTs.
+- `VIDEOR_DASHBOARD_USERNAME` – static service account username used by the Vue dashboard (defaults to `dashboard`).
+- `VIDEOR_DASHBOARD_TOKEN` – static API token issued to the dashboard. The same value is embedded into the frontend build.
 - `VIDEOR_DATABASE_URL` – optional SQLAlchemy URL (defaults to `sqlite:///data/videoreduce.db`).
 - `VIDEOR_INPUT_DIR` / `VIDEOR_OUTPUT_DIR` – optional overrides for the queue directories.
 
@@ -175,6 +177,13 @@ The service reads configuration from variables prefixed with `VIDEOR_`:
 
 The script creates `.venv/`, installs dependencies, applies SQLite migrations, and starts `uvicorn` with the queue worker.
 Logs are written to `/tmp/videoreduce-api.log`.
+
+During this process the Vue dashboard is compiled into static assets under `backend/app/static/frontend/`. Node.js 18 or newer
+with `npm` must be present locally; otherwise the API will start without a dashboard bundle.
+
+The dashboard authenticates automatically using the static service token. When overriding `VIDEOR_DASHBOARD_TOKEN`, export the
+same value as `VITE_ADMIN_API_TOKEN` before running `npm run build` so the frontend embeds the updated token. The
+`setup_backend.sh` script performs this wiring automatically for local development.
 
 ### Running Tests
 
@@ -189,6 +198,9 @@ pytest backend/tests
 docker compose build
 docker compose up -d
 ```
+
+The Docker image now performs a multi-stage build that compiles the Vue dashboard before packaging the FastAPI service. No
+additional steps are required beyond the standard compose workflow.
 
 Mount your SMB input/output shares into `data/input` and `data/output` respectively so the queue worker can pick up manifests
 and place transcoded files where downstream systems expect them.

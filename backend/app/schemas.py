@@ -4,7 +4,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, constr
 
 from .models import QueueStage, UserRole
 
@@ -173,3 +173,62 @@ class TokenListResponse(BaseModel):
 
     class Config:
         orm_mode = True
+
+
+class DashboardSnapshotCreate(BaseModel):
+    """Payload for recording dashboard analytics."""
+
+    active_jobs: int = Field(default=0, ge=0)
+    average_throughput_minutes: float = Field(default=0.0, ge=0)
+    smb_latency_ms: float = Field(default=0.0, ge=0)
+    storage_budget_bytes: int = Field(default=0, ge=0)
+
+
+class DashboardSnapshotResponse(DashboardSnapshotCreate):
+    """Dashboard metrics sample returned via the API."""
+
+    id: Optional[int]
+    recorded_at: datetime
+
+    class Config:
+        orm_mode = True
+
+
+class DashboardEventCreate(BaseModel):
+    """Payload describing a dashboard timeline event."""
+
+    title: constr(min_length=1)
+    description: constr(min_length=1)
+
+
+class DashboardEventResponse(BaseModel):
+    """Dashboard timeline event returned via the API."""
+
+    id: int
+    title: str
+    description: str
+    created_at: datetime
+
+    class Config:
+        orm_mode = True
+
+
+class CreateUserRequest(BaseModel):
+    """Request payload for provisioning a user API token."""
+
+    username: constr(min_length=1)
+
+
+class UserTokenResponse(BaseModel):
+    """API token metadata used by the dashboard users panel."""
+
+    id: int
+    username: str
+    token: str
+    created_at: datetime
+
+
+class CreateUserResponse(UserTokenResponse):
+    """Response body when a new user token is created."""
+
+    pass
