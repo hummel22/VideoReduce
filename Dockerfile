@@ -6,6 +6,8 @@ COPY frontend/package*.json ./
 RUN npm install
 
 COPY frontend .
+ARG ADMIN_DASHBOARD_TOKEN=dashboard-service-token
+ENV VITE_ADMIN_API_TOKEN=${ADMIN_DASHBOARD_TOKEN}
 RUN npm run build
 
 FROM python:3.11-slim
@@ -26,7 +28,9 @@ RUN chmod +x ./setup_backend.sh
 
 ENV VIDEOR_ADMIN_USERNAME=admin \
     VIDEOR_ADMIN_PASSWORD=changeme \
-    VIDEOR_JWT_SECRET_KEY=change-me
+    VIDEOR_JWT_SECRET_KEY=change-me \
+    VIDEOR_DASHBOARD_USERNAME=dashboard \
+    VIDEOR_DASHBOARD_TOKEN=dashboard-service-token
 
 EXPOSE 8000
 

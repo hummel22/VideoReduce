@@ -22,6 +22,7 @@ export PYTHONPATH="${PROJECT_ROOT}:${PYTHONPATH:-}"
 if command -v npm >/dev/null 2>&1 && [ -f "${FRONTEND_DIR}/package.json" ]; then
   pushd "${FRONTEND_DIR}" >/dev/null
   npm install
+  export VITE_ADMIN_API_TOKEN="${VIDEOR_DASHBOARD_TOKEN:-dashboard-service-token}"
   npm run build
   popd >/dev/null
   rm -rf "${FRONTEND_BUILD_DIR}"

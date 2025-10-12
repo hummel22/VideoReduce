@@ -8,6 +8,7 @@ from fastapi import APIRouter, FastAPI
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from .api import admin, auth as auth_router, configuration, queue
+from .bootstrap import bootstrap_service_accounts
 from .config import get_settings
 from .migrations import run_migrations
 from .queue import QueueWorker
@@ -25,6 +26,7 @@ def startup_event() -> None:
     """Run migrations and start the background worker."""
 
     run_migrations()
+    bootstrap_service_accounts()
     worker.start()
 
 
