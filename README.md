@@ -176,6 +176,9 @@ The service reads configuration from variables prefixed with `VIDEOR_`:
 The script creates `.venv/`, installs dependencies, applies SQLite migrations, and starts `uvicorn` with the queue worker.
 Logs are written to `/tmp/videoreduce-api.log`.
 
+During this process the Vue dashboard is compiled into static assets under `backend/app/static/frontend/`. Node.js 18 or newer
+with `npm` must be present locally; otherwise the API will start without a dashboard bundle.
+
 ### Running Tests
 
 ```bash
@@ -189,6 +192,9 @@ pytest backend/tests
 docker compose build
 docker compose up -d
 ```
+
+The Docker image now performs a multi-stage build that compiles the Vue dashboard before packaging the FastAPI service. No
+additional steps are required beyond the standard compose workflow.
 
 Mount your SMB input/output shares into `data/input` and `data/output` respectively so the queue worker can pick up manifests
 and place transcoded files where downstream systems expect them.

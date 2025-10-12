@@ -4,3 +4,5 @@ __pycache__/
 data/
 /tmp/
 backend/__pycache__/
+frontend/node_modules/
+frontend/dist/
