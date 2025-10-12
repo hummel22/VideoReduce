@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import secrets
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Response, status
 from sqlalchemy.orm import Session
 
 from ..auth import ensure_user
@@ -42,12 +42,16 @@ def list_tokens(
     return [TokenListResponse.from_orm(item) for item in tokens]
 
 
-@router.delete("/tokens/{token_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete(
+    "/tokens/{token_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    response_class=Response,
+)
 def revoke_token(
     token_id: int,
     token: dict = Depends(deps.require_role(UserRole.ADMIN)),
     session: Session = Depends(deps.get_db_session),
-) -> None:
+) -> Response:
     """Delete an API token."""
 
     token_obj = session.query(APIToken).filter(APIToken.id == token_id).one_or_none()
@@ -55,3 +59,4 @@ def revoke_token(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Token not found")
     session.delete(token_obj)
     session.commit()
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
