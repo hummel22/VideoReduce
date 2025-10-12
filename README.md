@@ -67,6 +67,14 @@ Each rule maps to transcoding parameters such as bitrate, CRF, preset, and conta
   ```
   Mount the SMB input and output shares into the container to ensure queue processing works end-to-end.
 
+### Administrative Dashboard
+
+- The FastAPI backend serves an embedded Vue 3 + PrimeVue admin panel from [`/admin`](http://localhost:8000/admin).
+- Static assets live under `backend/app/admin_ui/` and are mounted automatically when the service starts.
+- The panel supports administrator login, issuing mobile API tokens, and revoking existing tokens. It communicates with the `/auth/login` and `/admin/tokens` endpoints using the same JWT workflow as other clients.
+- Because the UI is bundled with CDN modules, no extra Node.js build step is required. Updates to `app.js` and `styles.css` are picked up immediately after reloading the page.
+- When iterating on the dashboard, run the FastAPI app (`uvicorn backend.app.main:app --reload`) and ensure the `/admin` route renders without console errors in the browser. Automated verification is available via `pytest backend/tests/test_admin_ui.py`.
+
 ## Running the Processing Service (Docker)
 
 1. **Prerequisites**
