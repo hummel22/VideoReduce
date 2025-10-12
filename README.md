@@ -1,15 +1,39 @@
 # VideoReduce
 
-VideoReduce is an Android application paired with a lightweight desktop service that transcodes large video files into smaller, high-quality versions. The platform preserves original media until each conversion is verified and supports elevated quality profiles for selected files.
+VideoReduce is an Android application paired with a lightweight backend service that transcodes large video files into smaller, high-quality versions. The platform preserves original media until each conversion is verified and supports elevated quality profiles for selected files. Both the mobile client and the backend dashboard work together to orchestrate SMB-based transfers, track transcoding progress, and manage reusable encoding portfolios.
 
 ## System Overview
 
-- **Android app** – Queues videos for processing, tracks conversion status, and stores metadata in a local SQLite database.
-- **Processing service** – Runs on a user-managed computer. It watches an SMB share for new jobs, performs the video transcode (e.g., via HandBrake CLI or FFmpeg), and writes converted outputs back to the share.
+- **Android app** – Authenticates against the backend, discovers local video files, applies filtering tools, and queues selected clips with a chosen or newly created transcode portfolio. It uploads originals to the configured SMB share, writes `<video_file_name>.json` job descriptors, and surfaces progress for uploads, transcodes, and downloads.
+- **Backend service & dashboard** – Provides REST APIs for authentication, configuration, and progress reporting. Administrators manage SMB credentials, transcode portfolios, and user accounts through a Vue-based dashboard. The service watches queue activity, stores history in SQLite, and exposes per-file progress by video name for the mobile client.
+- **Backend automation** – Ships with tooling to simplify local onboarding and production deployment. A `setup_backend.sh` helper script provisions a Python virtual environment, installs backend dependencies, applies database migrations, and launches the service. Containerized workflows are supported through a maintained `Dockerfile` and `docker-compose.yml` pair that can build and run the backend with a single command.
 - **Shared storage** – Two SMB directories coordinate hand-offs:
   - `/input` for originals written by the Android app.
   - `/output` for processed videos produced by the service.
   The app only purges originals after the user confirms the output is acceptable.
+
+## Android Application Experience
+
+1. **Login & Configuration**
+   - Authenticates with the backend to obtain session credentials.
+   - Fetches a configuration payload that describes SMB share details (URL, username, password) plus input and output directory paths.
+
+2. **Video Discovery & Selection**
+   - Scans the device for video content and surfaces results with modern Material UI components.
+   - Provides filters for size range, resolution, and video length to refine the selection.
+   - Supports selecting individual files or choosing all results before queuing.
+
+3. **Queueing Jobs**
+   - Presents a modal to choose an existing transcode portfolio or create a new one when the user taps **Queue**.
+   - Uploads each selected file to the SMB input directory and writes a matching JSON manifest describing the requested portfolio.
+
+4. **Monitoring Progress**
+   - Displays per-file progress bars that reflect upload, transcode, or download percentages, depending on the active stage.
+   - Offers dedicated views for in-progress jobs, completed items, and items awaiting review.
+
+5. **Review & Approval**
+   - Allows side-by-side viewing of the original and transcoded outputs along with the applied settings.
+   - Users can accept the transcode (with a confirmation warning that the original will be deleted), re-run with new settings, or keep both versions.
 
 ## Database and Migrations
 
@@ -24,6 +48,24 @@ Administrators can tune output settings based on:
 - Source resolution tiers
 
 Each rule maps to transcoding parameters such as bitrate, CRF, preset, and container format. Files flagged for "extra high quality" should use a dedicated profile.
+
+## Backend Service & Dashboard
+
+- Built with Vue for the administrative dashboard and backed by APIs that service the Android client.
+- Supports user management, SMB configuration, transcode portfolio definitions, and queue monitoring.
+- Persists queue history, user configuration, and run metadata in SQLite for later review.
+- Exposes endpoints that return real-time transcode progress keyed by video file name for the mobile app.
+- Provides a `setup_backend.sh` bootstrap script that:
+  1. Creates or reuses a Python virtual environment in `.venv/`.
+  2. Installs backend requirements from `requirements.txt` (or `pyproject.toml` where applicable).
+  3. Executes database migrations and seeding commands.
+  4. Starts the API server and the job processor with sensible defaults.
+- Includes a `Dockerfile` and `docker-compose.yml` so the full stack can be built and run with:
+  ```bash
+  docker compose build
+  docker compose up -d
+  ```
+  Mount the SMB input and output shares into the container to ensure queue processing works end-to-end.
 
 ## Running the Processing Service (Docker)
 
@@ -104,6 +146,28 @@ Each rule maps to transcoding parameters such as bitrate, CRF, preset, and conta
    - View logs: `docker compose logs -f`
    - Check queue status: `docker compose exec video-reduce-service python manage.py queue:list`
    - Trigger manual retry: `docker compose exec video-reduce-service python manage.py queue:retry --job-id <ID>`
+
+## Android Development & Build Workflow
+
+1. **Prerequisites**
+   - Android Studio Giraffe or newer with the Android Gradle Plugin matching the repository configuration.
+   - JDK 17 (bundled with Android Studio) and Android SDK platforms/Google USB drivers for device testing.
+
+2. **Local Development**
+   - Clone the repository and open the `android/` module in Android Studio.
+   - Sync Gradle (`File > Sync Project with Gradle Files`) to download dependencies and verify build variants.
+   - Use the **VideoReduceDebug** run configuration to install and debug on a connected device or emulator. Ensure the device can reach the backend API specified in the configuration payload.
+
+3. **Building APKs**
+   - **Debug APK**: `./gradlew assembleDebug` produces `android/app/build/outputs/apk/debug/app-debug.apk` for sideloading.
+   - **Release APK**:
+     1. Configure signing credentials in `android/gradle.properties` or via Android Studio's **Build > Generate Signed Bundle / APK** wizard.
+     2. Run `./gradlew assembleRelease` to emit `android/app/build/outputs/apk/release/app-release.apk`.
+     3. Upload the release APK to your distribution channel or sideload on test devices.
+
+4. **Testing & QA**
+   - Execute `./gradlew testDebugUnitTest` for JVM unit tests and `./gradlew connectedDebugAndroidTest` for instrumentation tests (requires a device or emulator).
+   - Validate upload/transcode/download progress flows against a staging backend before promoting builds.
 
 ## Development Notes
 
