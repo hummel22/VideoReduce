@@ -1,0 +1,22 @@
+FROM python:3.11-slim
+
+WORKDIR /app
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1
+
+COPY backend/requirements.txt ./backend/requirements.txt
+RUN pip install --no-cache-dir --upgrade pip \
+    && pip install --no-cache-dir -r backend/requirements.txt
+
+COPY backend ./backend
+COPY setup_backend.sh ./setup_backend.sh
+RUN chmod +x ./setup_backend.sh
+
+ENV VIDEOR_ADMIN_USERNAME=admin \
+    VIDEOR_ADMIN_PASSWORD=changeme \
+    VIDEOR_JWT_SECRET_KEY=change-me
+
+EXPOSE 8000
+
+CMD ["uvicorn", "backend.app.main:app", "--host", "0.0.0.0", "--port", "8000"]
