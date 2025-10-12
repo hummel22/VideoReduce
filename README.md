@@ -144,8 +144,54 @@ Each rule maps to transcoding parameters such as bitrate, CRF, preset, and conta
 6. **Monitoring**
 
    - View logs: `docker compose logs -f`
-   - Check queue status: `docker compose exec video-reduce-service python manage.py queue:list`
-   - Trigger manual retry: `docker compose exec video-reduce-service python manage.py queue:retry --job-id <ID>`
+   - Inspect queue state: `curl http://localhost:8000/queue/jobs`
+
+## Backend Development Quickstart
+
+The backend lives under `backend/` and is implemented with FastAPI, SQLAlchemy, and HandBrakeCLI integration. Follow the steps
+below to bootstrap a local environment that mirrors the production container.
+
+### Prerequisites
+
+- Python 3.11+
+- HandBrakeCLI available on your `PATH`
+- SQLite 3 (bundled with Python)
+
+### Required Environment Variables
+
+The service reads configuration from variables prefixed with `VIDEOR_`:
+
+- `VIDEOR_ADMIN_USERNAME` – dashboard login username.
+- `VIDEOR_ADMIN_PASSWORD` – dashboard login password.
+- `VIDEOR_JWT_SECRET_KEY` – signing secret for issued JWTs.
+- `VIDEOR_DATABASE_URL` – optional SQLAlchemy URL (defaults to `sqlite:///data/videoreduce.db`).
+- `VIDEOR_INPUT_DIR` / `VIDEOR_OUTPUT_DIR` – optional overrides for the queue directories.
+
+### Local Setup
+
+```bash
+./setup_backend.sh
+```
+
+The script creates `.venv/`, installs dependencies, applies SQLite migrations, and starts `uvicorn` with the queue worker.
+Logs are written to `/tmp/videoreduce-api.log`.
+
+### Running Tests
+
+```bash
+source .venv/bin/activate
+pytest backend/tests
+```
+
+### Container Workflow
+
+```bash
+docker compose build
+docker compose up -d
+```
+
+Mount your SMB input/output shares into `data/input` and `data/output` respectively so the queue worker can pick up manifests
+and place transcoded files where downstream systems expect them.
 
 ## Android Development & Build Workflow
 
