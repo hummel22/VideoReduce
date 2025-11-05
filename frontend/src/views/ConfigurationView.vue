@@ -42,33 +42,40 @@
 
       <section class="panel presets">
         <h2>Encoding presets</h2>
-        <div v-for="preset in form.presets" :key="preset.name" class="preset-card">
-          <header>
-            <div>
-              <h3>{{ preset.name }}</h3>
-              <p>{{ preset.description }}</p>
-            </div>
-            <span class="badge">{{ preset.tool }}</span>
-          </header>
-          <dl>
-            <div>
-              <dt>Target</dt>
-              <dd>{{ preset.target }}</dd>
-            </div>
-            <div>
-              <dt>Bitrate</dt>
-              <dd>{{ preset.bitrate }}</dd>
-            </div>
-            <div>
-              <dt>CRF</dt>
-              <dd>{{ preset.crf }}</dd>
-            </div>
-            <div>
-              <dt>Notes</dt>
-              <dd>{{ preset.notes }}</dd>
-            </div>
-          </dl>
-        </div>
+        <template v-if="form.presets.length">
+          <div v-for="preset in form.presets" :key="preset.name" class="preset-card">
+            <header>
+              <div>
+                <h3>{{ preset.name }}</h3>
+                <p>{{ preset.description }}</p>
+              </div>
+              <span class="badge">{{ preset.tool }}</span>
+            </header>
+            <dl>
+              <div>
+                <dt>Resolution</dt>
+                <dd>{{ preset.resolution }}</dd>
+              </div>
+              <div>
+                <dt>Video codec</dt>
+                <dd>{{ preset.videoCodec }}</dd>
+              </div>
+              <div>
+                <dt>Audio codec</dt>
+                <dd>{{ preset.audioCodec }}</dd>
+              </div>
+              <div>
+                <dt>Quality target</dt>
+                <dd>{{ preset.qualityTarget }}</dd>
+              </div>
+              <div>
+                <dt>Notes</dt>
+                <dd>{{ preset.notes }}</dd>
+              </div>
+            </dl>
+          </div>
+        </template>
+        <p v-else class="empty-presets">No encoding presets available.</p>
       </section>
     </div>
 
@@ -77,65 +84,176 @@
 </template>
 
 <script setup>
-import { reactive, ref } from 'vue';
-import { listEncodingRules } from '../api/client.js';
+import { onMounted, reactive, ref } from 'vue';
+import { getSmbConfiguration, listEncodingRules } from '../api/client.js';
 
 const status = ref('');
 
+const defaultPresets = Object.freeze([
+  {
+    name: 'Default mobile',
+    description: 'Balanced for quick review on Android devices.',
+    resolution: '720p @ 24fps',
+    videoCodec: 'H.264',
+    audioCodec: 'AAC Stereo',
+    qualityTarget: 'CRF 23',
+    tool: 'HandBrakeCLI',
+    notes: 'Enforces AAC stereo audio.'
+  },
+  {
+    name: 'Extra high quality',
+    description: 'Preserves visually lossless output for hero content.',
+    resolution: '4K @ 60fps',
+    videoCodec: 'H.265',
+    audioCodec: 'Dolby 5.1',
+    qualityTarget: 'CRF 20',
+    tool: 'FFmpeg',
+    notes: 'Allocates 5.1 audio and mezzanine container.'
+  }
+]);
+
+function cloneDefaultPresets() {
+  return defaultPresets.map((preset) => ({ ...preset }));
+}
+
 const form = reactive({
   smb: {
-    host: '//storage.local/VideoReduce',
-    username: 'transcode',
-    password: 'changeme',
-    input: '/input',
-    output: '/output'
+    host: '',
+    username: '',
+    password: '',
+    input: '',
+    output: ''
   },
-  presets: [
-    {
-      name: 'Default mobile',
-      description: 'Balanced for quick review on Android devices.',
-      target: '720p @ 24fps',
-      bitrate: '2.5 Mbps',
-      crf: 'CRF 23',
-      tool: 'HandBrakeCLI',
-      notes: 'Enforces AAC stereo audio.'
-    },
-    {
-      name: 'Extra high quality',
-      description: 'Preserves visually lossless output for hero content.',
-      target: '4K @ 60fps',
-      bitrate: '18 Mbps',
-      crf: 'CRF 20',
-      tool: 'FFmpeg',
-      notes: 'Allocates 5.1 audio and mezzanine container.'
-    }
-  ]
+  presets: cloneDefaultPresets()
 });
+
+function formatNumber(value, fractionDigits = 0) {
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric)) {
+    return String(value ?? '');
+  }
+  return numeric.toFixed(fractionDigits);
+}
+
+function describeRange(min, max, formatter) {
+  const hasMin = min !== null && min !== undefined;
+  const hasMax = max !== null && max !== undefined;
+  if (!hasMin && !hasMax) {
+    return '';
+  }
+  const format = formatter ?? ((value) => String(value));
+  const formattedMin = hasMin ? format(min) : '';
+  const formattedMax = hasMax ? format(max) : '';
+  if (hasMin && hasMax) {
+    if (formattedMin && formattedMax) {
+      return `${formattedMin} – ${formattedMax}`;
+    }
+    if (formattedMin) {
+      return `≥ ${formattedMin}`;
+    }
+    if (formattedMax) {
+      return `≤ ${formattedMax}`;
+    }
+    return '';
+  }
+  if (hasMin && formattedMin) {
+    return `≥ ${formattedMin}`;
+  }
+  if (hasMax && formattedMax) {
+    return `≤ ${formattedMax}`;
+  }
+  return '';
+}
+
+function describeRule(rule) {
+  const size = describeRange(rule.min_size_mb, rule.max_size_mb, (value) => `${formatNumber(value, 0)} MB`);
+  const duration = describeRange(
+    rule.min_duration_seconds,
+    rule.max_duration_seconds,
+    (value) => `${formatNumber(value / 60, 0)} min`
+  );
+  const resolution = describeRange(
+    rule.min_resolution_height,
+    rule.max_resolution_height,
+    (value) => `${formatNumber(value, 0)}p`
+  );
+  const segments = [size ? `Size ${size}` : '', duration ? `Duration ${duration}` : '', resolution ? `Resolution ${resolution}` : '']
+    .filter(Boolean);
+  return segments.length ? segments.join(' • ') : 'Applies to all queue jobs.';
+}
+
+function mapRuleToPreset(rule) {
+  const profile = rule.profile ?? {};
+  const resolution = describeRange(
+    rule.min_resolution_height,
+    rule.max_resolution_height,
+    (value) => `${formatNumber(value, 0)}p`
+  );
+  return {
+    name: profile.name ?? rule.name ?? `Rule ${rule.id}`,
+    description: describeRule(rule),
+    resolution: resolution || 'Any resolution',
+    videoCodec: profile.video_codec ? profile.video_codec.toUpperCase() : 'Auto',
+    audioCodec: profile.audio_codec ? profile.audio_codec.toUpperCase() : 'Auto',
+    qualityTarget: profile.quality_target ? profile.quality_target.toUpperCase() : 'Auto',
+    tool: profile.tool ?? 'HandBrakeCLI',
+    notes: rule.high_quality_only ? 'High quality jobs only' : 'Applies to all jobs.'
+  };
+}
+
+function applyEncodingRules(rules) {
+  if (Array.isArray(rules) && rules.length > 0) {
+    form.presets.splice(0, form.presets.length, ...rules.map(mapRuleToPreset));
+    return true;
+  }
+  form.presets.splice(0, form.presets.length, ...cloneDefaultPresets());
+  return false;
+}
 
 async function persist() {
   status.value = 'Draft saved locally. Sync via the authenticated API when credentials are available.';
   try {
     const rules = await listEncodingRules();
-    if (Array.isArray(rules) && rules.length > 0) {
-      form.presets.splice(
-        0,
-        form.presets.length,
-        ...rules.map((rule) => ({
-          name: rule.name ?? `Rule ${rule.id}`,
-          description: rule.description ?? 'Imported from backend',
-          target: `${rule.min_resolution_height ?? '—'}p`,
-          bitrate: rule.target_bitrate ?? rule.target ?? 'auto',
-          crf: rule.crf ?? 'auto',
-          tool: rule.tool ?? 'HandBrakeCLI',
-          notes: rule.notes ?? 'Loaded from backend rule set.'
-        }))
-      );
+    if (applyEncodingRules(rules)) {
       status.value = 'Live encoding rules synced from the backend API.';
+    } else {
+      status.value = 'No encoding rules returned by the backend API. Showing default presets.';
     }
   } catch (error) {
     console.warn('Unable to load encoding rules', error);
   }
 }
+
+async function loadSmbConfiguration() {
+  try {
+    const config = await getSmbConfiguration();
+    form.smb.host = config.share_url ?? '';
+    form.smb.username = config.username ?? '';
+    form.smb.password = config.password ?? '';
+    form.smb.input = config.input_path ?? '';
+    form.smb.output = config.output_path ?? '';
+  } catch (error) {
+    console.warn('Unable to load SMB configuration', error);
+  }
+}
+
+async function loadEncodingRules() {
+  try {
+    const rules = await listEncodingRules();
+    if (!applyEncodingRules(rules)) {
+      status.value = 'No encoding rules configured yet.';
+    }
+  } catch (error) {
+    console.warn('Unable to load encoding rules', error);
+    form.presets.splice(0, form.presets.length, ...cloneDefaultPresets());
+    status.value = 'Unable to load encoding rules. Showing default presets. Check backend connectivity.';
+  }
+}
+
+onMounted(() => {
+  void loadSmbConfiguration();
+  void loadEncodingRules();
+});
 </script>
 
 <style scoped>
@@ -220,6 +338,12 @@ input {
 
 .presets {
   align-content: start;
+}
+
+.empty-presets {
+  margin: 0;
+  color: #94a3b8;
+  font-style: italic;
 }
 
 .preset-card {

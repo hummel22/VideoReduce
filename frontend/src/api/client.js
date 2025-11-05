@@ -115,6 +115,10 @@ export async function listEncodingRules() {
   return request('/config/encoding/rules');
 }
 
+export async function getSmbConfiguration() {
+  return request('/config/smb');
+}
+
 export async function getDashboardOverview() {
   return request('/analytics/overview');
 }
