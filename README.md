@@ -154,6 +154,7 @@ below to bootstrap a local environment that mirrors the production container.
 ### Prerequisites
 
 - Python 3.11+
+- [uv](https://github.com/astral-sh/uv) CLI available on your `PATH`
 - HandBrakeCLI available on your `PATH`
 - SQLite 3 (bundled with Python)
 
@@ -175,7 +176,7 @@ The service reads configuration from variables prefixed with `VIDEOR_`:
 ./setup_backend.sh
 ```
 
-The script creates `.venv/`, installs dependencies, applies SQLite migrations, and starts `uvicorn` with the queue worker.
+The script creates `.venv/`, installs dependencies with `uv`, applies SQLite migrations, and starts `uvicorn` with the queue worker.
 Logs are written to `/tmp/videoreduce-api.log`.
 
 During this process the Vue dashboard is compiled into static assets under `backend/app/static/frontend/`. Node.js 18 or newer

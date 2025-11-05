@@ -73,10 +73,10 @@ import { getDashboardOverview, getHealth, listDashboardEvents } from '../api/cli
 
 const healthStatus = ref('unknown');
 const statistics = reactive({
-  activeJobs: 0,
-  averageThroughput: '0 min/h',
-  smbLatency: '0 ms',
-  storageBudget: '0 B'
+  activeJobs: '—',
+  averageThroughput: '—',
+  smbLatency: '—',
+  storageBudget: '—'
 });
 
 const recentEvents = ref([]);
@@ -116,12 +116,24 @@ function formatTimestamp(isoString) {
 async function loadAnalytics() {
   try {
     const overview = await getDashboardOverview();
-    statistics.activeJobs = overview.active_jobs ?? 0;
-    statistics.averageThroughput = formatThroughput(overview.average_throughput_minutes);
-    statistics.smbLatency = formatLatency(overview.smb_latency_ms);
-    statistics.storageBudget = formatStorage(overview.storage_budget_bytes);
+    const hasSnapshot = overview?.id != null;
+    if (hasSnapshot) {
+      statistics.activeJobs = overview.active_jobs ?? 0;
+      statistics.averageThroughput = formatThroughput(overview.average_throughput_minutes);
+      statistics.smbLatency = formatLatency(overview.smb_latency_ms);
+      statistics.storageBudget = formatStorage(overview.storage_budget_bytes);
+    } else {
+      statistics.activeJobs = '—';
+      statistics.averageThroughput = '—';
+      statistics.smbLatency = '—';
+      statistics.storageBudget = '—';
+    }
   } catch (error) {
     console.warn('Unable to load dashboard overview', error);
+    statistics.activeJobs = '—';
+    statistics.averageThroughput = '—';
+    statistics.smbLatency = '—';
+    statistics.storageBudget = '—';
   }
 
   try {

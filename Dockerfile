@@ -18,8 +18,8 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1
 
 COPY backend/requirements.txt ./backend/requirements.txt
-RUN pip install --no-cache-dir --upgrade pip \
-    && pip install --no-cache-dir -r backend/requirements.txt
+RUN pip install --no-cache-dir uv \
+    && uv pip install --python python -r backend/requirements.txt
 
 COPY backend ./backend
 COPY --from=frontend-builder /app/frontend/dist ./backend/app/static/frontend

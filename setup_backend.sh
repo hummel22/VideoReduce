@@ -4,18 +4,21 @@ set -euo pipefail
 PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 VENV_DIR="${PROJECT_ROOT}/.venv"
 PYTHON_BIN="${VENV_DIR}/bin/python"
-PIP_BIN="${VENV_DIR}/bin/pip"
 FRONTEND_DIR="${PROJECT_ROOT}/frontend"
 FRONTEND_BUILD_DIR="${PROJECT_ROOT}/backend/app/static/frontend"
 
+if ! command -v uv >/dev/null 2>&1; then
+  echo "uv is required but was not found in PATH. Install uv before running this script." >&2
+  exit 1
+fi
+
 if [ ! -d "${VENV_DIR}" ]; then
-  python3 -m venv "${VENV_DIR}"
+  uv venv "${VENV_DIR}"
 fi
 
 source "${VENV_DIR}/bin/activate"
 
-pip install --upgrade pip
-pip install -r "${PROJECT_ROOT}/backend/requirements.txt"
+uv pip install --python "${PYTHON_BIN}" -r "${PROJECT_ROOT}/backend/requirements.txt"
 
 export PYTHONPATH="${PROJECT_ROOT}:${PYTHONPATH:-}"
 
