@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from datetime import datetime
+from datetime import datetime
 from typing import Optional
 
 from pydantic import BaseModel, Field, constr
@@ -30,14 +31,70 @@ class MobileTokenRequest(BaseModel):
     token: str
 
 
-class SMBConfigResponse(BaseModel):
+class SMBConfigBase(BaseModel):
+    """Shared fields describing an SMB configuration."""
+
+    input_path: constr(min_length=1)
+    output_path: constr(min_length=1)
+    share_url: constr(min_length=1)
+    username: constr(min_length=1)
+    password: constr(min_length=1)
+
+
+class SMBConfigResponse(SMBConfigBase):
     """SMB configuration returned to clients."""
 
-    input_path: str
-    output_path: str
-    share_url: str
-    username: str
-    password: str
+    class Config:
+        orm_mode = True
+
+
+class SMBConfigUpdateRequest(SMBConfigBase):
+    """Payload used by administrators to update the SMB configuration."""
+
+    pass
+
+
+class SMBConfigTestResponse(BaseModel):
+    """Result of testing the connectivity to an SMB share."""
+
+    success: bool
+    message: str
+    latency_ms: float = Field(ge=0)
+
+
+class SMBPresetBase(BaseModel):
+    """Shared fields describing an SMB preset."""
+
+    name: constr(min_length=1)
+    share_url: constr(min_length=1)
+    username: constr(min_length=1)
+    password: constr(min_length=1)
+    input_path: constr(min_length=1)
+    output_path: constr(min_length=1)
+    description: Optional[str] = None
+
+
+class SMBPresetCreateRequest(SMBPresetBase):
+    """Payload used to create a new SMB preset."""
+
+    pass
+
+
+class SMBPresetUpdateRequest(SMBPresetBase):
+    """Payload used to update an existing SMB preset."""
+
+    pass
+
+
+class SMBPresetResponse(SMBPresetBase):
+    """Representation of an SMB preset stored in the database."""
+
+    id: int
+    created_at: datetime
+    updated_at: datetime
+
+    class Config:
+        orm_mode = True
 
 
 class EncodingProfileBase(BaseModel):

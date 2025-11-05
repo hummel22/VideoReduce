@@ -27,16 +27,24 @@ def get_current_token(
     return payload
 
 
-def require_role(role: UserRole):
-    """Create a dependency that ensures the current token has the desired role."""
+def require_roles(*roles: UserRole):
+    """Create a dependency ensuring the current token is one of the allowed roles."""
+
+    allowed_roles = {role.value for role in roles}
 
     def dependency(payload: dict = Depends(get_current_token)) -> dict:
         token_role = payload.get("role")
-        if token_role != role.value:
+        if token_role not in allowed_roles:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Insufficient permissions")
         return payload
 
     return dependency
+
+
+def require_role(role: UserRole):
+    """Create a dependency that ensures the current token has the desired role."""
+
+    return require_roles(role)
 
 
 def get_db_session(session: Session = Depends(get_session)) -> Session:
