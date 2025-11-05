@@ -88,6 +88,25 @@ class SMBConfig(Base):
     )
 
 
+class SMBPreset(Base):
+    """Reusable SMB configuration templates for administrators."""
+
+    __tablename__ = "smb_presets"
+
+    id: int = Column(Integer, primary_key=True)
+    name: str = Column(String(255), nullable=False)
+    description: Optional[str] = Column(Text)
+    share_url: str = Column(String(1024), nullable=False)
+    username: str = Column(String(255), nullable=False)
+    password: str = Column(String(255), nullable=False)
+    input_path: str = Column(String(1024), nullable=False)
+    output_path: str = Column(String(1024), nullable=False)
+    created_at: datetime = Column(DateTime, default=datetime.utcnow, nullable=False)
+    updated_at: datetime = Column(
+        DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False
+    )
+
+
 class EncodingProfile(Base):
     """Reusable encoding settings for transcoding jobs."""
 

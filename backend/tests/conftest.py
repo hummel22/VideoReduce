@@ -23,6 +23,7 @@ def api_client(tmp_path, monkeypatch):
         "backend.app.migrations",
         "backend.app.bootstrap",
         "backend.app.api.deps",
+        "backend.app.api.configuration",
         "backend.app.api.analytics",
         "backend.app.api.users",
         "backend.app.main",

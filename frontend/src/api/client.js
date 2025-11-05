@@ -119,6 +119,44 @@ export async function getSmbConfiguration() {
   return request('/config/smb');
 }
 
+export async function updateSmbConfiguration(payload) {
+  return request('/config/smb', {
+    method: 'PUT',
+    body: JSON.stringify(payload)
+  });
+}
+
+export async function testSmbConfiguration(payload) {
+  return request('/config/smb/test', {
+    method: 'POST',
+    body: JSON.stringify(payload)
+  });
+}
+
+export async function listSmbPresets() {
+  return request('/config/smb/presets');
+}
+
+export async function createSmbPreset(payload) {
+  return request('/config/smb/presets', {
+    method: 'POST',
+    body: JSON.stringify(payload)
+  });
+}
+
+export async function updateSmbPreset(id, payload) {
+  return request(`/config/smb/presets/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(payload)
+  });
+}
+
+export async function deleteSmbPreset(id) {
+  return request(`/config/smb/presets/${id}`, {
+    method: 'DELETE'
+  });
+}
+
 export async function getDashboardOverview() {
   return request('/analytics/overview');
 }
